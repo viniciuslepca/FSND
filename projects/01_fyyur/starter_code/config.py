@@ -9,5 +9,5 @@ DEBUG = True
 # Connect to the database
 
 
-# TODO IMPLEMENT DATABASE URL
+# TODO IMPLEMENT DATABASE URL -- DONE
 SQLALCHEMY_DATABASE_URI = 'postgres://postgres:postgres@localhost:5432/fyyur_db'
