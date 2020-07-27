@@ -5,7 +5,7 @@
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -104,6 +104,71 @@ class Show(db.Model):
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
+
+# Dictionary for states and abbreviations
+# Based on https://gist.github.com/rogerallen/1583593
+
+state_abbrev_from_name = {
+    'Alabama': 'AL',
+    'Alaska': 'AK',
+    'American Samoa': 'AS',
+    'Arizona': 'AZ',
+    'Arkansas': 'AR',
+    'California': 'CA',
+    'Colorado': 'CO',
+    'Connecticut': 'CT',
+    'Delaware': 'DE',
+    'Florida': 'FL',
+    'Georgia': 'GA',
+    'Guam': 'GU',
+    'Hawaii': 'HI',
+    'Idaho': 'ID',
+    'Illinois': 'IL',
+    'Indiana': 'IN',
+    'Iowa': 'IA',
+    'Kansas': 'KS',
+    'Kentucky': 'KY',
+    'Louisiana': 'LA',
+    'Maine': 'ME',
+    'Maryland': 'MD',
+    'Massachusetts': 'MA',
+    'Michigan': 'MI',
+    'Minnesota': 'MN',
+    'Mississippi': 'MS',
+    'Missouri': 'MO',
+    'Montana': 'MT',
+    'Nebraska': 'NE',
+    'Nevada': 'NV',
+    'New Hampshire': 'NH',
+    'New Jersey': 'NJ',
+    'New Mexico': 'NM',
+    'New York': 'NY',
+    'North Carolina': 'NC',
+    'North Dakota': 'ND',
+    'Northern Mariana Islands':'MP',
+    'Ohio': 'OH',
+    'Oklahoma': 'OK',
+    'Oregon': 'OR',
+    'Pennsylvania': 'PA',
+    'Puerto Rico': 'PR',
+    'Rhode Island': 'RI',
+    'South Carolina': 'SC',
+    'South Dakota': 'SD',
+    'Tennessee': 'TN',
+    'Texas': 'TX',
+    'Utah': 'UT',
+    'Vermont': 'VT',
+    'Virgin Islands': 'VI',
+    'Virginia': 'VA',
+    'Washington': 'WA',
+    'Washington,D.C': 'DC', # Changed this to fit the geodata list
+    'West Virginia': 'WV',
+    'Wisconsin': 'WI',
+    'Wyoming': 'WY'
+}
+
+state_name_from_abbrev = dict(map(reversed, state_abbrev_from_name.items()))
+
 
 def format_datetime(value, format='medium'):
   date = dateutil.parser.parse(value)
@@ -263,14 +328,64 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-  # TODO: insert form data as a new Venue record in the db, instead
+  error = False
+  # DONE: insert form data as a new Venue record in the db, instead
+  try:
+    # TODO: validate inputs?
+    
+
+    # Get values from form
+    name = request.form['name']
+    state_abbrev = state_abbrev_from_name[request.form['state']]
+    city = request.form['city']
+    address = request.form['address']
+
+    # Validate if the venue already exists
+    if len(Venue.query.filter_by(name=name, state=state_abbrev, city=city, address=address).all()) != 0:
+      raise Exception("This venue already exists")
+
+    phone = request.form['phone']
+    facebook_link = request.form['facebook_link']
+    genres = request.form.getlist('genres')
+
+    # Check for empty optional values
+    phone = phone if phone != "" else None
+    facebook_link = facebook_link if facebook_link != "" else None
+
+    # Create Venue model
+    venue = Venue(
+      name=name,
+      state=state_abbrev,
+      city=city,
+      address=address,
+      phone=phone,
+      facebook_link=facebook_link
+    )
+
+    db.session.add(venue)
+
+    # Add genres to the venue
+    for genre in genres:
+      genre_object = Genre.query.filter_by(name=genre).first()
+      venue.genres.append(genre_object)
+
+    # Commit
+    db.session.commit()
+  except Exception as e:
+    error = True
+    # DONE: on unsuccessful db insert, flash an error instead.
+    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed. Reason: ' + e.__str__())
+    db.session.rollback()
+  finally:
+    db.session.close()
+
   # TODO: modify data to be the data object returned from db insertion
 
-  # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+  if not error:
+    # on successful db insert, flash success
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  
   return render_template('pages/home.html')
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
