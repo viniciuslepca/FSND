@@ -331,9 +331,6 @@ def create_venue_submission():
   error = False
   # DONE: insert form data as a new Venue record in the db, instead
   try:
-    # TODO: validate inputs?
-    
-
     # Get values from form
     name = request.form['name']
     state_abbrev = state_abbrev_from_name[request.form['state']]
