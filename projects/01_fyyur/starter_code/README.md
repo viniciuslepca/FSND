@@ -1,6 +1,9 @@
 Fyyur
 -----
 
+### Student's notes to the grader
+There are still a few "TODO's" left in the application, but since there's no front-end associated with those functionalities, I interpreted them as being optional based on the response I received from my question [here](https://knowledge.udacity.com/questions/291016). I would suggest updating the README or the comments in the code, because some of the TODO's don't seem to match the current state of the starter code, which makes it much harder to understand what actually has to be done.
+
 ### Introduction
 
 Fyyur is a musical venue and artist booking site that facilitates the discovery and bookings of shows between local performing artists and venues. This site lets you list new artists and venues, discover them, and list shows with artists as a venue owner.
