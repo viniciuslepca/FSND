@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask_wtf import Form
-from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
-from wtforms.validators import DataRequired, AnyOf, URL
+from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
+from wtforms.validators import DataRequired, AnyOf, URL, Optional, Length
 
 class ShowForm(Form):
     artist_id = StringField(
@@ -20,73 +20,73 @@ class VenueForm(Form):
     name = StringField(
         'name', validators=[DataRequired()]
     )
-    city = StringField(
-        'city', validators=[DataRequired()]
-    )
-    state = SelectField(
-        'state', validators=[DataRequired()],
-        choices=[
-            ('AL', 'AL'),
-            ('AK', 'AK'),
-            ('AZ', 'AZ'),
-            ('AR', 'AR'),
-            ('CA', 'CA'),
-            ('CO', 'CO'),
-            ('CT', 'CT'),
-            ('DE', 'DE'),
-            ('DC', 'DC'),
-            ('FL', 'FL'),
-            ('GA', 'GA'),
-            ('HI', 'HI'),
-            ('ID', 'ID'),
-            ('IL', 'IL'),
-            ('IN', 'IN'),
-            ('IA', 'IA'),
-            ('KS', 'KS'),
-            ('KY', 'KY'),
-            ('LA', 'LA'),
-            ('ME', 'ME'),
-            ('MT', 'MT'),
-            ('NE', 'NE'),
-            ('NV', 'NV'),
-            ('NH', 'NH'),
-            ('NJ', 'NJ'),
-            ('NM', 'NM'),
-            ('NY', 'NY'),
-            ('NC', 'NC'),
-            ('ND', 'ND'),
-            ('OH', 'OH'),
-            ('OK', 'OK'),
-            ('OR', 'OR'),
-            ('MD', 'MD'),
-            ('MA', 'MA'),
-            ('MI', 'MI'),
-            ('MN', 'MN'),
-            ('MS', 'MS'),
-            ('MO', 'MO'),
-            ('PA', 'PA'),
-            ('RI', 'RI'),
-            ('SC', 'SC'),
-            ('SD', 'SD'),
-            ('TN', 'TN'),
-            ('TX', 'TX'),
-            ('UT', 'UT'),
-            ('VT', 'VT'),
-            ('VA', 'VA'),
-            ('WA', 'WA'),
-            ('WV', 'WV'),
-            ('WI', 'WI'),
-            ('WY', 'WY'),
-        ]
-    )
+    # city = StringField(
+    #     'city', validators=[DataRequired()]
+    # )
+    # state = SelectField(
+    #     'state', validators=[DataRequired()],
+    #     choices=[
+    #         ('AL', 'AL'),
+    #         ('AK', 'AK'),
+    #         ('AZ', 'AZ'),
+    #         ('AR', 'AR'),
+    #         ('CA', 'CA'),
+    #         ('CO', 'CO'),
+    #         ('CT', 'CT'),
+    #         ('DE', 'DE'),
+    #         ('DC', 'DC'),
+    #         ('FL', 'FL'),
+    #         ('GA', 'GA'),
+    #         ('HI', 'HI'),
+    #         ('ID', 'ID'),
+    #         ('IL', 'IL'),
+    #         ('IN', 'IN'),
+    #         ('IA', 'IA'),
+    #         ('KS', 'KS'),
+    #         ('KY', 'KY'),
+    #         ('LA', 'LA'),
+    #         ('ME', 'ME'),
+    #         ('MT', 'MT'),
+    #         ('NE', 'NE'),
+    #         ('NV', 'NV'),
+    #         ('NH', 'NH'),
+    #         ('NJ', 'NJ'),
+    #         ('NM', 'NM'),
+    #         ('NY', 'NY'),
+    #         ('NC', 'NC'),
+    #         ('ND', 'ND'),
+    #         ('OH', 'OH'),
+    #         ('OK', 'OK'),
+    #         ('OR', 'OR'),
+    #         ('MD', 'MD'),
+    #         ('MA', 'MA'),
+    #         ('MI', 'MI'),
+    #         ('MN', 'MN'),
+    #         ('MS', 'MS'),
+    #         ('MO', 'MO'),
+    #         ('PA', 'PA'),
+    #         ('RI', 'RI'),
+    #         ('SC', 'SC'),
+    #         ('SD', 'SD'),
+    #         ('TN', 'TN'),
+    #         ('TX', 'TX'),
+    #         ('UT', 'UT'),
+    #         ('VT', 'VT'),
+    #         ('VA', 'VA'),
+    #         ('WA', 'WA'),
+    #         ('WV', 'WV'),
+    #         ('WI', 'WI'),
+    #         ('WY', 'WY'),
+    #     ]
+    # )
     address = StringField(
         'address', validators=[DataRequired()]
     )
     phone = StringField(
-        'phone'
+        'phone', validators=[Optional()]
     )
     image_link = StringField(
-        'image_link'
+        'image_link', validators=[Optional(), URL()]
     )
     genres = SelectMultipleField(
         # ALREADY DONE: implement enum restriction
@@ -114,7 +114,16 @@ class VenueForm(Form):
         ]
     )
     facebook_link = StringField(
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[Optional(), URL()]
+    )
+    website = StringField(
+        'website', validators=[Optional(), URL()]
+    )
+    seeking_talent = BooleanField(
+        'seeking_talent'
+    )
+    seeking_description = StringField(
+        'seeking_description', validators=[Length(max=500)]
     )
 
 class ArtistForm(Form):
@@ -184,7 +193,7 @@ class ArtistForm(Form):
         'phone'
     )
     image_link = StringField(
-        'image_link'
+        'image_link', validators=[URL()]
     )
     genres = SelectMultipleField(
         # ALREADY DONE: implement enum restriction

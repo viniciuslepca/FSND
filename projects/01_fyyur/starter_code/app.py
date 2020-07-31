@@ -5,7 +5,7 @@
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
+from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -321,16 +321,23 @@ def show_venue(venue_id):
 #  Create Venue
 #  ----------------------------------------------------------------
 
-@app.route('/venues/create', methods=['GET'])
+@app.route('/venues/create', methods=['GET', 'POST'])
 def create_venue_form():
   form = VenueForm()
-  return render_template('forms/new_venue.html', form=form)
+  # Deal with GET request
+  if request.method == 'GET':
+    return render_template('forms/new_venue.html', form=form)
 
-@app.route('/venues/create', methods=['POST'])
-def create_venue_submission():
   error = False
   # DONE: insert form data as a new Venue record in the db, instead
   try:
+    if not form.validate_on_submit():
+      errors = []
+      for fieldName, errorMessages in form.errors.items():
+        for err in errorMessages:
+          errors.append(errorMessages)
+      raise Exception(errors.__str__())
+
     # Get values from form
     name = request.form['name']
     state_abbrev = state_abbrev_from_name[request.form['state']]
@@ -343,11 +350,20 @@ def create_venue_submission():
 
     phone = request.form['phone']
     facebook_link = request.form['facebook_link']
+    image_link = request.form['image_link']
+    website = request.form['website']
+    seeking_talent = False
+    if 'seeking_talent' in request.form:
+      seeking_talent = True
+    seeking_description = request.form['seeking_description']
     genres = request.form.getlist('genres')
 
     # Check for empty optional values
-    phone = phone if phone != "" else None
-    facebook_link = facebook_link if facebook_link != "" else None
+    phone = phone if phone != '' else None
+    facebook_link = facebook_link if facebook_link != '' else None
+    image_link = image_link if image_link != '' else None
+    seeking_description = seeking_description if seeking_description != '' else None
+    website = website if website != "" else None
 
     # Create Venue model
     venue = Venue(
@@ -356,7 +372,11 @@ def create_venue_submission():
       city=city,
       address=address,
       phone=phone,
-      facebook_link=facebook_link
+      facebook_link=facebook_link,
+      image_link=image_link,
+      website=website,
+      seeking_talent=seeking_talent,
+      seeking_description=seeking_description
     )
 
     db.session.add(venue)

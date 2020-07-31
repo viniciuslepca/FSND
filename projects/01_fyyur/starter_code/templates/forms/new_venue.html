@@ -3,6 +3,7 @@
 {% block content %}
   <div class="form-wrapper">
     <form method="post" class="form">
+      {{ form.csrf_token() }}
       <h3 class="form-heading">List a new venue <a href="{{ url_for('index') }}" title="Back to homepage"><i class="fa fa-home pull-right"></i></a></h3>
       <div class="form-group">
         <label for="name">Name</label>
@@ -38,8 +39,24 @@
         {{ form.genres(class_ = 'form-control', placeholder='Genres, separated by commas', id='genres', autofocus = true) }}
       </div>
       <div class="form-group">
+        <label for="seeking_talent">Are you seeking new talent?</label>
+        {{ form.seeking_talent(id='seeking_talent', autofocus = true) }}
+      </div>
+      <div class="form-group hidden" id="seeking_description_form">
+        <label for="seeking_description">Seeking talent description</label>
+        {{ form.seeking_description(class_ = 'form-control', placeholder='Please leave a message for potential applicants', id='seeking_description', autofocus = true) }}
+      </div>
+      <div class="form-group">
+        <label for="website">Website</label>
+        {{ form.website(class_ = 'form-control', placeholder='http://', id='website', autofocus = true, type='url') }}
+      </div>
+      <div class="form-group">
           <label for="facebook_link">Facebook Link</label>
           {{ form.facebook_link(class_ = 'form-control', placeholder='http://', id='facebook_link', autofocus = true, type='url') }}
+      </div>
+      <div class="form-group">
+        <label for="image_link">Image Link</label>
+        {{ form.image_link(class_ = 'form-control', placeholder='http://', id='image_link', autofocus = true, type='url') }}
       </div>
       <input type="submit" value="Create Venue" class="btn btn-primary btn-lg btn-block">
     </form>
@@ -48,6 +65,18 @@
   <!-- Scripts to populate state and field dropdowns. Credit to https://geodata.solutions/ -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> 
   <script src="//geodata.solutions/includes/statecity.js"></script>
+  <script>
+    // Script to only show the seeking description box if seeking talent is true
+    document.getElementById('seeking_talent').addEventListener('change', (event) => {
+      let descriptionForm = document.getElementById('seeking_description_form');
+      if (event.target.checked) {
+        descriptionForm.classList.remove('hidden');
+      } else {
+        document.getElementById('seeking_description').value = "";
+        descriptionForm.classList.add('hidden');
+      }
+    })
+  </script>
 {% endblock %}
 
 <!-- 
