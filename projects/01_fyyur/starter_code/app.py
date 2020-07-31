@@ -203,30 +203,56 @@ def index():
 
 @app.route('/venues')
 def venues():
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
-  return render_template('pages/venues.html', areas=data);
+  # DONE: replace with real venues data.
+  # num_shows should be aggregated based on number of upcoming shows per venue.
+
+  data = []
+  # Get all the different locations (city, state) from the database
+  locations = db.session.query(Venue.state, Venue.city).group_by(Venue.state, Venue.city).order_by(Venue.state, Venue.city).all()
+  for location in locations:
+    state = location[0]
+    city = location[1]
+    location_object = {
+      'city': city,
+      'state': state,
+      'venues': []
+    }
+    # Get all venues from this location
+    venues = Venue.query.filter_by(city=city, state=state).all()
+    for venue in venues:
+      venue_object = {
+        'id': venue.id,
+        'name': venue.name,
+        'num_upcoming_shows': len(venue.shows)
+      }
+      # Add the venue object to the location object
+      location_object['venues'].append(venue_object)
+
+    # Add the location object to data
+    data.append(location_object)
+  
+  # data=[{
+  #   "city": "San Francisco",
+  #   "state": "CA",
+  #   "venues": [{
+  #     "id": 1,
+  #     "name": "The Musical Hop",
+  #     "num_upcoming_shows": 0,
+  #   }, {
+  #     "id": 3,
+  #     "name": "Park Square Live Music & Coffee",
+  #     "num_upcoming_shows": 1,
+  #   }]
+  # }, {
+  #   "city": "New York",
+  #   "state": "NY",
+  #   "venues": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }]
+  return render_template('pages/venues.html', areas=data)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
@@ -353,9 +379,13 @@ def create_venue_form():
     city = request.form['city']
     address = request.form['address']
 
-    # Validate if the venue already exists
-    if len(Venue.query.filter_by(name=name, state=state_abbrev, city=city, address=address).all()) != 0:
-      raise Exception("This venue already exists")
+    # Validate the venue
+    potential_venue = Venue.query.filter_by(state=state_abbrev, city=city, address=address).first()
+    if potential_venue is not None:
+      if potential_venue.name == name:
+        raise Exception("This venue already exists")
+      else:
+        raise Exception("This address is already taken by venue " + potential_venue.name)
 
     phone = request.form['phone']
     facebook_link = request.form['facebook_link']
