@@ -19,6 +19,12 @@ def helper_valid_get_questions(self, res):
     for key in categories:
         self.assertEqual(categories[key], self.categories[key])
 
+def helper_error_404(self, res, data):
+    self.assertEqual(res.status_code, 404)
+    self.assertFalse(data['success'])
+    self.assertEqual(data['error'], 404)
+    self.assertEqual(data['message'], 'not found')
+
 
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
@@ -41,6 +47,13 @@ class TriviaTestCase(unittest.TestCase):
                 '6': 'Sports',
                 '7': 'Science'
             }
+
+        self.question = {
+            'question': "Which Jamaican runner is an 11-time world champion and holds the record in the 100 and 200-meter race?",
+            'answer': "Usain Bolt",
+            'difficulty': 1,
+            'category': 6
+        }
 
 
         # binds the app to the current context
@@ -70,21 +83,44 @@ class TriviaTestCase(unittest.TestCase):
     
     def test_get_questions_no_page(self):
         res = self.client().get('/questions')
-        helper_valid_get_questions(self, res)
-        
+        helper_valid_get_questions(self, res)        
 
     def test_get_questions_valid_page(self):
         res = self.client().get('/questions?page=1')
         helper_valid_get_questions(self, res)
 
     def test_get_questions_invalid_page(self):
-        res = self.client().get('questions?page=1000')
+        res = self.client().get('/questions?page={}'.format(10000))
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 404)
-        self.assertFalse(data['success'])
-        self.assertEqual(data['error'], 404)
-        self.assertEqual(data['message'], "not found")
+        helper_error_404(self, res, data)
+
+    def test_delete_valid_question(self):
+        question = Question(**self.question)
+        question.insert()
+        id = question.id
+        original_count = Question.query.count()
+
+        res = self.client().delete('/questions/{}'.format(id))
+        data = json.loads(res.data)
+        new_count = Question.query.count()
+        deleted_question = Question.query.filter(Question.id == id).one_or_none()
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(new_count, original_count - 1)
+        self.assertIsNone(deleted_question)
+        self.assertTrue(data['success'])
+
+    def test_delete_invalid_question(self):
+        original_count = Question.query.count()
+        res = self.client().delete('/questions/{}'.format(10000))
+        data = json.loads(res.data)
+        new_count = Question.query.count()
+        self.assertEqual(new_count, original_count)
+
+        helper_error_404(self, res, data)
+
+
 
 
 
