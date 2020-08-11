@@ -8,6 +8,20 @@ from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
+def create_categories_object(categories):
+  categories_object = {}
+  for category in categories:
+    categories_object[str(category.id)] = category.type
+  return categories_object
+
+def paginate_questions(questions, request):
+  page = request.args.get('page', 1, type=int)
+  start = (page-1) * QUESTIONS_PER_PAGE
+  end = start + QUESTIONS_PER_PAGE
+
+  formatted_questions = [question.format() for question in questions]
+  return formatted_questions[start:end]
+
 def create_app(test_config=None):
   # create and configure the app
   app = Flask(__name__)
@@ -29,23 +43,23 @@ def create_app(test_config=None):
 
 
   '''
-  @TODO: 
+  @DONE: 
   Create an endpoint to handle GET requests 
   for all available categories.
   '''
   @app.route('/categories')
   def get_categories():
     categories = Category.query.order_by(Category.id).all()
-    formatted_categories = [category.format() for category in categories]
+    categories_object = create_categories_object(categories)
 
     return jsonify({
       'success': True,
-      'categories': formatted_categories
+      'categories': categories_object
     })
 
 
   '''
-  @TODO: 
+  @DONE: 
   Create an endpoint to handle GET requests for questions, 
   including pagination (every 10 questions). 
   This endpoint should return a list of questions, 
@@ -56,6 +70,24 @@ def create_app(test_config=None):
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions. 
   '''
+  @app.route('/questions')
+  def get_questions():
+    questions = Question.query.order_by(Question.id).all()
+    paginated_questions = paginate_questions(questions, request)
+
+    if not paginated_questions:
+      abort(404)
+
+    categories = Category.query.order_by(Category.id).all()
+    categories_object = create_categories_object(categories)
+
+    return jsonify({
+      'success': True,
+      'questions': paginated_questions,
+      'total_questions': len(questions),
+      'categories': categories_object,
+      'current_category': None
+    })
 
   '''
   @TODO: 
@@ -114,6 +146,13 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+  @app.errorhandler(404)
+  def not_found(error):
+    return jsonify({
+      'success': False,
+      'error': 404,
+      'message': "not found"
+    }), 404
   
   return app
 

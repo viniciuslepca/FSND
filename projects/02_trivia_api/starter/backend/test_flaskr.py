@@ -6,6 +6,19 @@ from flask_sqlalchemy import SQLAlchemy
 from flaskr import create_app
 from models import setup_db, Question, Category
 
+def helper_valid_get_questions(self, res):
+    data = json.loads(res.data)
+
+    self.assertEqual(res.status_code, 200)
+    self.assertTrue(data['success'])
+    self.assertEqual(data['total_questions'], Question.query.count())
+    self.assertEqual(len(data['questions']), 10)
+    self.assertIsNone(data['current_category'])
+
+    categories = data['categories']
+    for key in categories:
+        self.assertEqual(categories[key], self.categories[key])
+
 
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
@@ -19,36 +32,16 @@ class TriviaTestCase(unittest.TestCase):
         setup_db(self.app, self.database_path)
 
         # Setup default categories
-        self.categories = [
-            {
-                'id': 1,
-                'type': 'Science'
-            },
-            {
-                'id': 2,
-                'type': 'Art'
-            },
-            {
-                'id': 3,
-                'type': 'Geography'
-            },
-            {
-                'id': 4,
-                'type': 'History'
-            },
-            {
-                'id': 5,
-                'type': 'Entertainment'
-            },
-            {
-                'id': 6,
-                'type': 'Sports'
-            },
-            {
-                'id': 1,
-                'type': 'Science'
-            },
-        ]
+        self.categories = {
+                '1': 'Science',
+                '2': 'Art',
+                '3': 'Geography',
+                '4': 'History',
+                '5': 'Entertainment',
+                '6': 'Sports',
+                '7': 'Science'
+            }
+
 
         # binds the app to the current context
         with self.app.app_context():
@@ -71,9 +64,28 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        for index, category in enumerate(data['categories']):
-            self.assertEqual(category['id'], self.categories[index]['id'])
-            self.assertEqual(category['type'], self.categories[index]['type'])
+        categories = data['categories']
+        for key in categories:
+            self.assertEqual(categories[key], self.categories[key])
+    
+    def test_get_questions_no_page(self):
+        res = self.client().get('/questions')
+        helper_valid_get_questions(self, res)
+        
+
+    def test_get_questions_valid_page(self):
+        res = self.client().get('/questions?page=1')
+        helper_valid_get_questions(self, res)
+
+    def test_get_questions_invalid_page(self):
+        res = self.client().get('questions?page=1000')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['error'], 404)
+        self.assertEqual(data['message'], "not found")
+
 
 
 # Make the tests conveniently executable
