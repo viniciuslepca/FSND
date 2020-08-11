@@ -19,11 +19,20 @@ def helper_valid_get_questions(self, res):
     for key in categories:
         self.assertEqual(categories[key], self.categories[key])
 
-def helper_error_404(self, res, data):
-    self.assertEqual(res.status_code, 404)
+def helper_error(self, res, data, error, message):
+    self.assertEqual(res.status_code, error)
     self.assertFalse(data['success'])
-    self.assertEqual(data['error'], 404)
-    self.assertEqual(data['message'], 'not found')
+    self.assertEqual(data['error'], error)
+    self.assertEqual(data['message'], message)
+
+def helper_error_400(self, res, data):
+    helper_error(self, res, data, 400, 'bad request')
+
+def helper_error_404(self, res, data):
+    helper_error(self, res, data, 404, 'not found')
+
+def helper_error_405(self, res, data):
+    helper_error(self, res, data, 405, 'method not allowed')
 
 
 class TriviaTestCase(unittest.TestCase):
@@ -54,7 +63,6 @@ class TriviaTestCase(unittest.TestCase):
             'difficulty': 1,
             'category': 6
         }
-
 
         # binds the app to the current context
         with self.app.app_context():
@@ -103,13 +111,13 @@ class TriviaTestCase(unittest.TestCase):
 
         res = self.client().delete('/questions/{}'.format(id))
         data = json.loads(res.data)
-        new_count = Question.query.count()
         deleted_question = Question.query.filter(Question.id == id).one_or_none()
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(new_count, original_count - 1)
         self.assertIsNone(deleted_question)
         self.assertTrue(data['success'])
+        self.assertEqual(data['total_questions'], original_count - 1)
+        self.assertEqual(data['deleted'], id)
 
     def test_delete_invalid_question(self):
         original_count = Question.query.count()
@@ -119,6 +127,33 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(new_count, original_count)
 
         helper_error_404(self, res, data)
+
+    def test_create_new_question(self):
+        original_count = Question.query.count()
+        res = self.client().post('/questions', json=self.question)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 201)
+        self.assertTrue(data['success'])
+        self.assertEqual(data['total_questions'], original_count + 1)
+        added_question = Question.query.filter(Question.id == data['created']).one_or_none()
+        self.assertIsNotNone(added_question)
+
+    def test_create_new_question_invalid_route(self):
+        original_count = Question.query.count()
+        res = self.client().post('/questions/1', json=self.question)
+        data = json.loads(res.data)
+
+        helper_error_405(self, res, data)
+
+    def test_create_new_question_no_body(self):
+        original_count = Question.query.count()
+        res = self.client().post('/questions')
+        data = json.loads(res.data)
+
+        helper_error_400(self, res, data)
+
+
 
 
 

@@ -105,7 +105,9 @@ def create_app(test_config=None):
     question.delete()
 
     return jsonify({
-      'success': True
+      'success': True,
+      'deleted': id,
+      'total_questions': Question.query.count()
     })
 
   '''
@@ -118,6 +120,28 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
+  @app.route('/questions', methods=['POST'])
+  def create_question():
+    body = request.get_json()
+    if body is None:
+      abort(400)
+    question = body.get('question', None)
+    answer = body.get('answer', None)
+    category = body.get('category', None)
+    difficulty = body.get('difficulty', None)
+
+    try:
+      q = Question(question=question, answer=answer, category=category, difficulty=difficulty)
+      q.insert()
+    except:
+      abort(422)
+    finally:
+      return jsonify({
+        'success': True,
+        'created': q.id,
+        'total_questions': Question.query.count()
+      }), 201
+
 
   '''
   @TODO: 
@@ -157,6 +181,14 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+  @app.errorhandler(400)
+  def bad_request(error):
+    return jsonify({
+      'success': False,
+      'error': 400,
+      'message': 'bad request'
+    }), 400
+
   @app.errorhandler(404)
   def not_found(error):
     return jsonify({
@@ -164,6 +196,22 @@ def create_app(test_config=None):
       'error': 404,
       'message': 'not found'
     }), 404
+
+  @app.errorhandler(405)
+  def method_not_allowed(error):
+    return jsonify({
+      'success': False,
+      'error': 405,
+      'message': 'method not allowed'
+    }), 405
+
+  @app.errorhandler(422)
+  def unprocessable_entity(error):
+    return jsonify({
+      'success': False,
+      'error': 422,
+      'message': 'unprocessable entity'
+    }), 422
   
   return app
 
