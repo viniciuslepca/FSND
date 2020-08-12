@@ -111,7 +111,7 @@ def create_app(test_config=None):
     })
 
   '''
-  @TODO: 
+  @DONE: 
   Create an endpoint to POST a new question, 
   which will require the question and answer text, 
   category, and difficulty score.
@@ -125,6 +125,20 @@ def create_app(test_config=None):
     body = request.get_json()
     if body is None:
       abort(400)
+
+    # Handle search
+    search_term = body.get('searchTerm', None)
+    if search_term is not None:
+      results = Question.query.filter(Question.question.ilike('%' + search_term + '%')).order_by(Question.id).all()
+
+      return jsonify({
+        'success': True,
+        'questions': paginate_questions(results, request),
+        'total_questions': len(results),
+        'current_category': None
+      })
+
+    # Handle create question
     question = body.get('question', None)
     answer = body.get('answer', None)
     category = body.get('category', None)
@@ -144,7 +158,7 @@ def create_app(test_config=None):
 
 
   '''
-  @TODO: 
+  @DONE: ABOVE
   Create a POST endpoint to get questions based on a search term. 
   It should return any questions for whom the search term 
   is a substring of the question. 
@@ -162,6 +176,14 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+  @app.route('categories/<int:category_id>/questions')
+  def get_questions_by_category(category_id):
+    return jsonify({
+      'success': True,
+      'questions': None,
+      'total_questions': None,
+      'current_category': None
+    })
 
 
   '''

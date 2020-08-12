@@ -19,21 +19,17 @@ def helper_valid_get_questions(self, res):
     for key in categories:
         self.assertEqual(categories[key], self.categories[key])
 
-def helper_error(self, res, data, error, message):
+def helper_error(self, res, data, error):
     self.assertEqual(res.status_code, error)
     self.assertFalse(data['success'])
     self.assertEqual(data['error'], error)
-    self.assertEqual(data['message'], message)
-
-def helper_error_400(self, res, data):
-    helper_error(self, res, data, 400, 'bad request')
-
-def helper_error_404(self, res, data):
-    helper_error(self, res, data, 404, 'not found')
-
-def helper_error_405(self, res, data):
-    helper_error(self, res, data, 405, 'method not allowed')
-
+    error_to_message = {
+        400: 'bad request',
+        404: 'not found',
+        405: 'method not allowed',
+        422: 'unprocessable entity'
+    }
+    self.assertEqual(data['message'], error_to_message[error])
 
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
@@ -101,7 +97,7 @@ class TriviaTestCase(unittest.TestCase):
         res = self.client().get('/questions?page={}'.format(10000))
         data = json.loads(res.data)
 
-        helper_error_404(self, res, data)
+        helper_error(self, res, data, 404)
 
     def test_delete_valid_question(self):
         question = Question(**self.question)
@@ -126,7 +122,7 @@ class TriviaTestCase(unittest.TestCase):
         new_count = Question.query.count()
         self.assertEqual(new_count, original_count)
 
-        helper_error_404(self, res, data)
+        helper_error(self, res, data, 404)
 
     def test_create_new_question(self):
         original_count = Question.query.count()
@@ -144,16 +140,38 @@ class TriviaTestCase(unittest.TestCase):
         res = self.client().post('/questions/1', json=self.question)
         data = json.loads(res.data)
 
-        helper_error_405(self, res, data)
+        helper_error(self, res, data, 405)
 
     def test_create_new_question_no_body(self):
         original_count = Question.query.count()
         res = self.client().post('/questions')
         data = json.loads(res.data)
 
-        helper_error_400(self, res, data)
+        helper_error(self, res, data, 400)
 
+    def test_search_question_with_results(self):
+        res = self.client().post('/questions', json={'searchTerm': 'what'})
+        data = json.loads(res.data)
 
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertTrue(len(data['questions']))
+        self.assertEqual(data['total_questions'], Question.query.filter(Question.question.ilike('%what%')).count())
+        self.assertIsNone(data['current_category'])
+    
+    def test_search_question_no_results(self):
+        res = self.client().post('/questions', json={'searchTerm': 'this_is_a_very_long_string_that_is_definitely_not_in_the_database'})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertFalse(len(data['questions']))
+        self.assertEqual(data['total_questions'], 0)
+        self.assertIsNone(data['current_category'])
+
+    def test_get_questions_by_category(self):
+        res = self.client().get('/categories/1/questions')
+        data = json.loads(res.data)
 
 
 

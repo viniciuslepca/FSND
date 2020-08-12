@@ -38,6 +38,9 @@ class Question(db.Model):
     self.category = category
     self.difficulty = difficulty
 
+  def __repr__(self):
+    return f'<Question {self.id}: {self.question}>'
+
   def insert(self):
     db.session.add(self)
     db.session.commit()
@@ -70,6 +73,9 @@ class Category(db.Model):
 
   def __init__(self, type):
     self.type = type
+
+  def __repr__(self):
+    return f'<Category {self.id}: {self.type}>'
 
   def format(self):
     return {
