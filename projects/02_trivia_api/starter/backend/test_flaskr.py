@@ -72,7 +72,7 @@ class TriviaTestCase(unittest.TestCase):
         pass
 
     """
-    TODO
+    DONE
     Write at least one test for each test for successful operation and for expected errors.
     """
     def test_get_categories(self):
@@ -188,6 +188,57 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
 
         helper_error(self, res, data, 404)
+
+    def test_generate_question_for_game_no_previous_any_category(self):
+        res = self.client().post('/quizzes', json={'previous_questions': [], 'quiz_category': {'type': 'click', 'id': 0}})
+        data = json.loads(res.data)
+
+        self.assertTrue(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertIsNotNone(data['question'])
+
+    def test_generate_question_for_game_specific_category(self):
+        category = 1
+        quiz_category = {'type': self.categories[str(category)], 'id': category}
+        res = self.client().post('/quizzes', json={'previous_questions': [], 'quiz_category': quiz_category})
+        data = json.loads(res.data)
+
+        self.assertTrue(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertIsNotNone(data['question'])
+        self.assertEqual(data['question']['category'], category)
+
+    def test_generate_question_for_game_given_previous_questions(self):
+        category = 1
+        quiz_category = {'type': self.categories[str(category)], 'id': category}
+        previous_questions = [20, 21] # Missing: 22
+        res = self.client().post('/quizzes', json={'previous_questions': previous_questions, 'quiz_category': quiz_category})
+        data = json.loads(res.data)
+
+        self.assertTrue(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertIsNotNone(data['question'])
+        self.assertEqual(data['question']['category'], category)
+        self.assertEqual(data['question']['id'], 22)
+
+    def test_generate_question_for_game_missing_body(self):
+        res = self.client().post('/quizzes')
+        data = json.loads(res.data)
+
+        helper_error(self, res, data, 400)
+
+    def test_generate_question_for_game_missing_category(self):
+        res = self.client().post('/quizzes', json={'previous_questions': []})
+        data = json.loads(res.data)
+
+        helper_error(self, res, data, 400)
+
+    def test_generate_question_for_game_invalid_method(self):
+        res = self.client().get('/quizzes')
+        data = json.loads(res.data)
+
+        helper_error(self, res, data, 405)
+
 
 
 

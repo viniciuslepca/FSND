@@ -169,7 +169,7 @@ def create_app(test_config=None):
   '''
 
   '''
-  @TODO: 
+  @DONE: 
   Create a GET endpoint to get questions based on category. 
 
   TEST: In the "List" tab / main screen, clicking on one of the 
@@ -192,7 +192,7 @@ def create_app(test_config=None):
     })
 
   '''
-  @TODO: 
+  @DONE: 
   Create a POST endpoint to get questions to play the quiz. 
   This endpoint should take category and previous question parameters 
   and return a random questions within the given category, 
@@ -202,9 +202,42 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+  @app.route('/quizzes', methods=['POST'])
+  def generate_question_for_game():
+    body = request.get_json()
+    if body is None:
+      abort(400)
+
+    previous_questions = body.get('previous_questions', [])
+    quiz_category = body.get('quiz_category', None)
+    if quiz_category is None:
+      abort(400)
+    
+    category_id = quiz_category.get('id', None)
+    if category_id is None:
+      abort(400)
+
+    potential_questions = []
+    if category_id == 0:   # Search for all categories
+      potential_questions = Question.query.filter(~Question.id.in_(previous_questions)).all()
+    else:
+      potential_questions = Question.query.filter(~Question.id.in_(previous_questions), Question.category == category_id).all()
+    
+    if not potential_questions:
+      return jsonify({
+        'success': True,
+        'question': None
+      })
+
+    question = random.choice(potential_questions)
+
+    return jsonify({
+      'success': True,
+      'question': question.format()
+    })
 
   '''
-  @TODO: 
+  @DONE: 
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
