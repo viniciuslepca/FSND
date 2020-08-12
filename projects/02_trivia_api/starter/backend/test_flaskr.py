@@ -12,7 +12,7 @@ def helper_valid_get_questions(self, res):
     self.assertEqual(res.status_code, 200)
     self.assertTrue(data['success'])
     self.assertEqual(data['total_questions'], Question.query.count())
-    self.assertEqual(len(data['questions']), 10)
+    self.assertTrue(len(data['questions']) <= 10)
     self.assertIsNone(data['current_category'])
 
     categories = data['categories']
@@ -165,14 +165,29 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertFalse(len(data['questions']))
+        self.assertEqual(len(data['questions']), 0)
         self.assertEqual(data['total_questions'], 0)
         self.assertIsNone(data['current_category'])
 
     def test_get_questions_by_category(self):
-        res = self.client().get('/categories/1/questions')
+        category = 1
+        res = self.client().get(f'/categories/{category}/questions')
         data = json.loads(res.data)
 
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertEqual(data['total_questions'], Question.query.filter(Question.category == 1).count())
+        self.assertTrue(len(data['questions']) <= 10)
+        self.assertEqual(data['current_category'], category)
+
+        for question in data['questions']:
+            self.assertEqual(question['category'], category)
+
+    def test_get_questions_by_category_invalid_page(self):
+        res = self.client().get('/categories/1/questions?page={}'.format(10000))
+        data = json.loads(res.data)
+
+        helper_error(self, res, data, 404)
 
 
 

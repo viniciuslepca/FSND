@@ -75,7 +75,7 @@ def create_app(test_config=None):
     questions = Question.query.order_by(Question.id).all()
     paginated_questions = paginate_questions(questions, request)
 
-    if not paginated_questions:
+    if not paginated_questions and questions:
       abort(404)
 
     categories = Category.query.order_by(Category.id).all()
@@ -176,15 +176,20 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
-  @app.route('categories/<int:category_id>/questions')
+  @app.route('/categories/<int:category_id>/questions')
   def get_questions_by_category(category_id):
+    questions = Question.query.filter(Question.category == category_id).order_by(Question.id).all()
+    paginated_questions = paginate_questions(questions, request)
+
+    if not paginated_questions and questions:
+      abort(404)
+
     return jsonify({
       'success': True,
-      'questions': None,
-      'total_questions': None,
-      'current_category': None
+      'questions': paginated_questions,
+      'total_questions': len(questions),
+      'current_category': category_id
     })
-
 
   '''
   @TODO: 
@@ -234,6 +239,14 @@ def create_app(test_config=None):
       'error': 422,
       'message': 'unprocessable entity'
     }), 422
+
+  @app.errorhandler(500)
+  def internal_server_error(error):
+    return jsonify({
+      'success': False,
+      'error': 500,
+      'message': 'internal server error'
+    }), 500
   
   return app
 
