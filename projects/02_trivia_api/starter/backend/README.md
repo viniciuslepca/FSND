@@ -255,83 +255,83 @@ The API will generally return four error types when requests fail:
         "total_questions": 18
     }
     ```
-    2. Search for a question
-        - Searches for a question by case-insensitive partial string search
-        - Request parameters:
-            - "searchTerm": the `string` to be searched for (required and passed as a JSON object as body argument)
-            - (Optional) `int page`: passed as a query parameter. If not provided, will be set as 1 by default.
-        - Returns: A JSON object with 4 keys:
-            - "success": holds `true` if the request was successful
-            - "questions": the paginated result questions (at most 10 results per page)
-            - "total_questions": the total number of results obtained from this search
-            - "current_category": `null`, since the search doesn't account for specific categories
-        - Sample: `curl -X POST http://127.0.0.1:5000/questions -H "Content-Type: application/json" -d '{"searchTerm": "what"}'`
-        ```json
-        200 OK
+2. Search for a question
+    - Searches for a question by case-insensitive partial string search
+    - Request parameters:
+        - "searchTerm": the `string` to be searched for (required and passed as a JSON object as body argument)
+        - (Optional) `int page`: passed as a query parameter. If not provided, will be set as 1 by default.
+    - Returns: A JSON object with 4 keys:
+        - "success": holds `true` if the request was successful
+        - "questions": the paginated result questions (at most 10 results per page)
+        - "total_questions": the total number of results obtained from this search
+        - "current_category": `null`, since the search doesn't account for specific categories
+    - Sample: `curl -X POST http://127.0.0.1:5000/questions -H "Content-Type: application/json" -d '{"searchTerm": "what"}'`
+    ```json
+    200 OK
+    {
+    "current_category": null,
+    "questions": [
         {
-        "current_category": null,
-        "questions": [
-            {
-            "answer": "Apollo 13",
-            "category": 5,
-            "difficulty": 4,
-            "id": 2,
-            "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
-            },
-            {
-            "answer": "Tom Cruise",
-            "category": 5,
-            "difficulty": 4,
-            "id": 4,
-            "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
-            },
-            {
-            "answer": "Edward Scissorhands",
-            "category": 5,
-            "difficulty": 3,
-            "id": 6,
-            "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
-            },
-            {
-            "answer": "Muhammad Ali",
-            "category": 4, 
-            "difficulty": 1,
-            "id": 9,
-            "question": "What boxer's original name is Cassius Clay?"
-            },
-            {
-            "answer": "Lake Victoria",
-            "category": 3,
-            "difficulty": 2,
-            "id": 13,
-            "question": "What is the largest lake in Africa?"
-            },
-            {
-            "answer": "Mona Lisa",
-            "category": 2,
-            "difficulty": 3,
-            "id": 17,
-            "question": "La Giaconda is better known as what?"
-            },
-            {
-            "answer": "The Liver",
-            "category": 1,
-            "difficulty": 4,
-            "id": 20,
-            "question": "What is the heaviest organ in the human body?"
-            },
-            {
-            "answer": "Blood",
-            "category": 1,
-            "difficulty": 4,
-            "id": 22,
-            "question": "Hematology is a branch of medicine involving the study of what?"
-            }
-        ],
-        "success": true,
-        "total_questions": 8
+        "answer": "Apollo 13",
+        "category": 5,
+        "difficulty": 4,
+        "id": 2,
+        "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+        },
+        {
+        "answer": "Tom Cruise",
+        "category": 5,
+        "difficulty": 4,
+        "id": 4,
+        "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+        },
+        {
+        "answer": "Edward Scissorhands",
+        "category": 5,
+        "difficulty": 3,
+        "id": 6,
+        "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+        },
+        {
+        "answer": "Muhammad Ali",
+        "category": 4, 
+        "difficulty": 1,
+        "id": 9,
+        "question": "What boxer's original name is Cassius Clay?"
+        },
+        {
+        "answer": "Lake Victoria",
+        "category": 3,
+        "difficulty": 2,
+        "id": 13,
+        "question": "What is the largest lake in Africa?"
+        },
+        {
+        "answer": "Mona Lisa",
+        "category": 2,
+        "difficulty": 3,
+        "id": 17,
+        "question": "La Giaconda is better known as what?"
+        },
+        {
+        "answer": "The Liver",
+        "category": 1,
+        "difficulty": 4,
+        "id": 20,
+        "question": "What is the heaviest organ in the human body?"
+        },
+        {
+        "answer": "Blood",
+        "category": 1,
+        "difficulty": 4,
+        "id": 22,
+        "question": "Hematology is a branch of medicine involving the study of what?"
         }
-        ```
+    ],
+    "success": true,
+    "total_questions": 8
+    }
+    ```
 
 ### GET '/categories/{category_id}/questions'
 - Fetches questions based on a given category
