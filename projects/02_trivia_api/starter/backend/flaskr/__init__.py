@@ -75,6 +75,7 @@ def create_app(test_config=None):
     questions = Question.query.order_by(Question.id).all()
     paginated_questions = paginate_questions(questions, request)
 
+    # Abort if paginated_questions is empty but questions is not - ie, an invalid page was requested
     if not paginated_questions and questions:
       abort(404)
 
@@ -181,6 +182,7 @@ def create_app(test_config=None):
     questions = Question.query.filter(Question.category == category_id).order_by(Question.id).all()
     paginated_questions = paginate_questions(questions, request)
 
+    # Abort if paginated_questions is empty but questions is not - ie, an invalid page was requested
     if not paginated_questions and questions:
       abort(404)
 
@@ -223,12 +225,14 @@ def create_app(test_config=None):
     else:
       potential_questions = Question.query.filter(~Question.id.in_(previous_questions), Question.category == category_id).all()
     
+    # If there are no more questions left, return None
     if not potential_questions:
       return jsonify({
         'success': True,
         'question': None
       })
 
+    # Randomly choose one of the potential questions
     question = random.choice(potential_questions)
 
     return jsonify({
