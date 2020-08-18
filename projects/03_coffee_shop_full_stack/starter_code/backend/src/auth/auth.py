@@ -89,7 +89,7 @@ def check_permissions(permission, payload):
     return True
 
 '''
-@TODO implement verify_decode_jwt(token) method
+@DONE implement verify_decode_jwt(token) method
     @INPUTS
         token: a json web token (string)
 

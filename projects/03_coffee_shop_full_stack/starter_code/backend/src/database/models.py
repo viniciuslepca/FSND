@@ -3,7 +3,10 @@ from sqlalchemy import Column, String, Integer
 from flask_sqlalchemy import SQLAlchemy
 import json
 
-database_filename = "database.db"
+# Main database
+# database_filename = "database.db"
+# Used for testing
+database_filename = 'test_database.db'
 project_dir = os.path.dirname(os.path.abspath(__file__))
 database_path = "sqlite:///{}".format(os.path.join(project_dir, database_filename))
 
