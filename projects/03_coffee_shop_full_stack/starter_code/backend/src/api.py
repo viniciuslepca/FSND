@@ -45,7 +45,7 @@ def get_drinks():
 
 
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     GET /drinks-detail
         it should require the 'get:drinks-detail' permission
         it should contain the drink.long() data representation
@@ -63,8 +63,22 @@ def get_drinks_detail():
     })
 
 
+def validate_recipe(recipe):
+    # Ensure that the recipe is a list
+    if type(recipe) != list:
+        abort(400)
+
+    # Ensure that all ingredients are well-formed
+    for ingredient in recipe:
+        if 'name' not in ingredient or 'color' not in ingredient or 'parts' not in ingredient:
+            abort(400)
+        if ingredient['name'] == '' or ingredient['color'] == '' or ingredient['parts'] == '':
+            abort(400)
+
+    return True
+
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     POST /drinks
         it should create a new row in the drinks table
         it should require the 'post:drinks' permission
@@ -83,16 +97,7 @@ def post_drink():
     if title == '' or recipe is None:
         abort(400)
 
-    # Ensure that the recipe is a list
-    if type(recipe) != list:
-        abort(400)
-
-    # Ensure that all ingredients are well-formed
-    for ingredient in recipe:
-        if 'name' not in ingredient or 'color' not in ingredient or 'parts' not in ingredient:
-            abort(400)
-        if ingredient['name'] == '' or ingredient['color'] == '' or ingredient['parts'] == '':
-            abort(400)
+    validate_recipe(recipe)
 
     # Try to create drink
     try:
@@ -116,7 +121,7 @@ def post_drink():
 
 
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     PATCH /drinks/<id>
         where <id> is the existing model id
         it should respond with a 404 error if <id> is not found
@@ -126,7 +131,38 @@ def post_drink():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<int:id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
+def patch_drink(id):
+    drink = Drink.query.filter(Drink.id == id).one_or_none()
+    if drink is None:
+        abort(404)
 
+    body = request.get_json()
+    title = body.get('title', None)
+    recipe = body.get('recipe', None)
+    if title is None and recipe is None:
+        abort(400)
+
+    # Make changes
+    if title is not None:
+        drink.title = title
+    if recipe is not None:
+        validate_recipe(recipe)
+        recipe_str = json.dumps([ob for ob in recipe])
+        drink.recipe = recipe_str
+
+    try:
+        drink.update()
+    except:
+        abort(422)
+
+    drinks = Drink.query.order_by(Drink.id).all()
+
+    return jsonify({
+        'success': True,
+        'drinks': [drink.long() for drink in drinks]
+    })
 
 '''
 @TODO implement endpoint
