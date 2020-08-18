@@ -157,7 +157,7 @@ def verify_decode_jwt(token):
             }, 400)
 
 '''
-@TODO implement @requires_auth(permission) decorator method
+@DONE implement @requires_auth(permission) decorator method
     @INPUTS
         permission: string permission (i.e. 'post:drink')
 
