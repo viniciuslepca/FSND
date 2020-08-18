@@ -1,5 +1,5 @@
 import json
-from flask import request, _request_ctx_stack
+from flask import request, _request_ctx_stack, abort
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
@@ -37,7 +37,7 @@ def get_token_auth_header():
         raise AuthError({
                 'code': 'authorization_header_missing',
                 'description': 'Authorization header is expected.'
-            }, 401)
+        }, 401)
 
     parts = auth.split()
     if parts[0].lower() != 'bearer':
@@ -102,6 +102,7 @@ def check_permissions(permission, payload):
     !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
 '''
 def verify_decode_jwt(token):
+    raise AuthError('error', 450)
     # Code based on app.py from the BasicFlaskAuth example
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
@@ -170,9 +171,13 @@ def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            token = get_token_auth_header()
-            payload = verify_decode_jwt(token)
-            check_permissions(permission, payload)
+            try:
+                token = get_token_auth_header()
+                payload = verify_decode_jwt(token)
+                check_permissions(permission, payload)
+            except AuthError as exc:
+                abort(exc.status_code)
+            
             return f(payload, *args, **kwargs)
 
         return wrapper
