@@ -83,7 +83,7 @@ def validate_recipe(recipe):
         it should create a new row in the drinks table
         it should require the 'post:drinks' permission
         it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
+    returns status code 201 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks', methods=['POST'])
@@ -165,7 +165,7 @@ def patch_drink(id):
     })
 
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     DELETE /drinks/<id>
         where <id> is the existing model id
         it should respond with a 404 error if <id> is not found
@@ -174,7 +174,23 @@ def patch_drink(id):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<int:id>', methods=['DELETE'])
+@requires_auth('delete:drinks')
+def delete_drink(id):
+    # Get drink
+    drink = Drink.query.filter(Drink.id == id).one_or_none()
+    if drink is None:
+        abort(404)
 
+    try:
+        drink.delete()
+    except:
+        abort(422)
+
+    return jsonify({
+        'success': True,
+        'delete': id
+    })
 
 ## Error Handling
 '''
@@ -183,10 +199,10 @@ Example error handling for unprocessable entity
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-                    "success": False, 
-                    "error": 422,
-                    "message": "unprocessable"
-                    }), 422
+        'success': False,
+        'error': 422,
+        'message': 'unprocessable'
+    }), 422
 
 '''
 @TODO implement error handlers using the @app.errorhandler(error) decorator
