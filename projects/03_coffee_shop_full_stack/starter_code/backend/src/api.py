@@ -9,7 +9,14 @@ from .auth.auth import AuthError, requires_auth
 
 app = Flask(__name__)
 setup_db(app)
-CORS(app)
+# CORS(app)
+CORS(app, resources={r'/*': {'origins': '*'}})
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, true')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
+    return response
 
 '''
 @DONE uncomment the following line to initialize the database
@@ -65,6 +72,47 @@ def get_drinks_detail():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
+def post_drink():
+    body = request.get_json()
+    id = body.get('id', -1)
+    title = body.get('title', '')
+    recipe = body.get('recipe', None)
+    # Abort if title or recipe where not given
+    if title == '' or recipe is None:
+        abort(400)
+
+    # Ensure that the recipe is a list
+    if type(recipe) != list:
+        abort(400)
+
+    # Ensure that all ingredients are well-formed
+    for ingredient in recipe:
+        if 'name' not in ingredient or 'color' not in ingredient or 'parts' not in ingredient:
+            abort(400)
+        if ingredient['name'] == '' or ingredient['color'] == '' or ingredient['parts'] == '':
+            abort(400)
+
+    # Try to create drink
+    try:
+        recipe_str = json.dumps([ob for ob in recipe])
+        if id == -1:
+            drink = Drink(title=title, recipe=recipe_str)
+        else:
+            # Create with a specific id
+            drink = Drink(id=id, title=title, recipe=recipe_str)
+
+        drink.insert()
+    except:
+        abort(422)
+
+    drinks = Drink.query.order_by(Drink.id).all()
+
+    return jsonify({
+        'success': True,
+        'drinks': [drink.long() for drink in drinks]
+    }), 201
 
 
 '''
